@@ -33,13 +33,40 @@ trait Stream[+A] {
     case Cons(h, t) ⇒ Cons(h, () ⇒ t().take(n - 1))
   }
 
-  def drop(n: Int): Stream[A] = ???
+  // Exercise 5.2
+  def drop(n: Int): Stream[A] = this match {
+    case Empty ⇒ Empty
+    case Cons(_, _) if n <= 0 ⇒ this
+    case Cons(_, t) ⇒ t().drop(n - 1)
+  }
 
-  def takeWhile(p: A => Boolean): Stream[A] = ???
+  // Exercise 5.3
+  def takeWhile(p: A => Boolean): Stream[A] = this match {
+    case Empty ⇒ Empty
+    case Cons(h, _) if !p(h()) ⇒ Empty
+    case Cons(h, t) ⇒ Cons(h, () ⇒ t().takeWhile(p))
+  }
 
-  def forAll(p: A => Boolean): Boolean = ???
+  // Exercise 5.4
+  def forAll(p: A => Boolean): Boolean =
+    foldRight(true) { (a, b) ⇒ p(a) && b }
 
-  def headOption: Option[A] = ???
+  // Exercise 5.5
+  def takeWhileUsingFoldRight(p: A => Boolean): Stream[A]  = {
+    foldRight(empty[A]) { (a, as) ⇒
+      if (!p(a)) {
+        empty[A]
+      } else {
+        cons(a, as.takeWhile(p))
+      }
+    }
+  }
+
+  // Exercise 5.5
+  def headOption: Option[A] = {
+    // Use foldRight
+    ???
+  }
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
