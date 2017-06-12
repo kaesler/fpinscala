@@ -65,7 +65,7 @@ trait Stream[+A] {
   // Exercise 5.5
   def headOption: Option[A] = {
     // Use foldRight
-    ???
+    foldRight(Option.empty[A]) { (a, _) => Some(a)   }
   }
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
