@@ -3,7 +3,11 @@ package fpinscala.laziness
 import Stream._
 trait Stream[+A] {
 
-  def foldRight[B](z: => B)(f: (A, => B) => B): B = // The arrow `=>` in front of the argument type `B` means that the function `f` takes its second argument by name and may choose not to evaluate it.
+  // Note: kae:
+  //  - z is what you get on an empty list
+  //  - B is the type of the result of the function
+  def foldRight[B](z: => B)
+    (f: (A, => B) => B): B = // The arrow `=>` in front of the argument type `B` means that the function `f` takes its second argument by name and may choose not to evaluate it.
     this match {
       case Cons(h,t) => f(h(), t().foldRight(z)(f)) // If `f` doesn't evaluate its second argument, the recursion never occurs.
       case _ => z
@@ -62,7 +66,7 @@ trait Stream[+A] {
     }
   }
 
-  // Exercise 5.5
+  // Exercise 5.6
   def headOption: Option[A] = {
     // Use foldRight
     foldRight(Option.empty[A]) { (a, _) => Some(a)   }
@@ -70,8 +74,36 @@ trait Stream[+A] {
 
   // 5.7 map, filter, append, flatmap using foldRight. Part of the exercise is
   // writing your own function signatures.
+  def map[B](f: A ⇒ B): Stream[B] = {
+    foldRight(empty[B]) { (a, bs) ⇒
+      cons(f(a), bs)
+    }
+  }
 
-  def startsWith[B](s: Stream[B]): Boolean = ???
+  def filter(p: A ⇒ Boolean): Stream[A] = {
+    foldRight(empty[A]) { (a, as) ⇒
+      if (p(a)) {
+        cons(a, as)
+      } else {
+        as
+      }
+    }
+  }
+
+  def append[B >: A](bs: ⇒ Stream[B]) : Stream[B] = {
+    foldRight(bs) { (bb, bbs) ⇒
+      cons(bb, bbs)
+    }
+  }
+
+  def startsWith[B](s: Stream[B]): Boolean = {
+    (this, s) match {
+      case (_, Empty) ⇒ true
+      case (Empty, _) ⇒ false
+      case (Cons(h1, t1), Cons(h2, t2)) ⇒
+        h1() == h2() && t1().startsWith(t2())
+    }
+  }
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
