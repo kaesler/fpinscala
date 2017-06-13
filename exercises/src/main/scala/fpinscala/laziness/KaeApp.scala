@@ -38,4 +38,10 @@ object KaeApp extends App {
   println(
     Stream.fibs.take(10).toList
   )
+  println(
+    Stream.onesUsingUnfold.take(8).toList
+  )
+  println(
+    Stream.fibsUsingUnfold.take(10).toList
+  )
 }

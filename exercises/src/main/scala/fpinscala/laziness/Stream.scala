@@ -139,5 +139,38 @@ object Stream {
     cons(0, cons(1, f(0, 1)))
   }
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = ???
+  // Exercise 5.11
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    f(z) match {
+      case None ⇒ Stream.empty
+      case Some((a, s)) ⇒
+        cons(a, unfold(s)(f))
+    }
+  }
+
+  // Exercise 5.12
+  def onesUsingUnfold: Stream[Int] =
+  // Note: state is ignored
+    unfold(()) { _: Unit ⇒
+      Some(1, ())
+    }
+
+  def constantUsingUnfold[A](a: A): Stream[A] =
+  // Note: state is ignored
+    unfold(()) { _: Unit ⇒
+      Some(a, ())
+    }
+
+  def fromUsingUnfold(n: Int): Stream[Int] =
+    // Note: "state" is the next Int to be emitted
+    unfold(n) { s: Int ⇒
+      Some(s, s + 1)
+    }
+
+  def fibsUsingUnfold: Stream[Int] = {
+    // Note: "state" is the next two elements to be emitted
+    unfold((0, 1)) { case (a, b) ⇒
+      Some((a, (b, a + b)))
+    }
+  }
 }
