@@ -32,4 +32,10 @@ object KaeApp extends App {
   println(
     Stream(1, 2, 3, 4).startsWith(Stream(1, 2, 3, 4, 5))
   )
+  println(
+    Stream.constant("a").take(20).toList
+  )
+  println(
+    Stream.fibs.take(10).toList
+  )
 }
