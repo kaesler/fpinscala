@@ -44,4 +44,7 @@ object KaeApp extends App {
   println(
     Stream.fibsUsingUnfold.take(10).toList
   )
+  println(
+    Stream(1, 2, 3).mapUsingUnfold(_ * 2).toList
+  )
 }

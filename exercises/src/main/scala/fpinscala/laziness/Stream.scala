@@ -104,6 +104,16 @@ trait Stream[+A] {
         h1() == h2() && t1().startsWith(t2())
     }
   }
+
+  // Exercise 5.13
+  def mapUsingUnfold[B](f: A ⇒ B): Stream[B] = {
+    // State could be the remaining stream to map over
+    unfold(this) {
+      case Empty ⇒ None
+      case Cons(h, t) ⇒ Some((f(h()), t()))
+    }
+  }
+
 }
 case object Empty extends Stream[Nothing]
 case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
@@ -173,4 +183,5 @@ object Stream {
       Some((a, (b, a + b)))
     }
   }
+
 }
