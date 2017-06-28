@@ -81,18 +81,47 @@ object RNG {
     // Make a dummy list of right size and foldLeft.
     List.fill(count)(())
       .foldLeft[(List[Int], RNG)]((Nil, rng)) { case ((is, lastRng), _) =>
-        val (nextI, nextRng) = lastRng.nextInt
-        (is :+ nextI, nextRng)
+      val (nextI, nextRng) = lastRng.nextInt
+      (is :+ nextI, nextRng)
     }
   }
 
-  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = {
-    ???
+  // Exercise 6.5
+  def doubleUsingMap(rng: RNG): (Double, RNG) = {
+    // Produces random Ints that can be converted to Double
+    val nonMinimumInt: Rand[Int] = { rng =>
+      var res = rng.nextInt
+      while(res._1 == Int.MinValue) {
+        res = rng.nextInt
+      }
+      res
+    }
+    map(nonMinimumInt)(_.toDouble)(rng)
   }
 
-  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = {
-    ???
+  // Exercise 6.6
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = {
+    val res: Rand[C] = { rng =>
+      val (a, g1) = ra(rng)
+      val (b, g2) = rb(g1)
+      (f(a,b), g2)
+    }
+    res
   }
+
+  // Exercise 6.7
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = { rng =>
+    val res: (List[A], RNG) = {
+      fs
+        .foldLeft[(List[A], RNG)]((Nil, rng)) { case ((as,rng), lastRand) =>
+        val (nextA, nextRng) = lastRand(rng)
+        (as :+ nextA, nextRng)
+      }
+    }
+    res
+  }
+  def intsUsingSequence(count: Int)(rng: RNG): Rand[List[Int]] =
+    sequence(List.fill(count)(int))
 
   def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
 }
