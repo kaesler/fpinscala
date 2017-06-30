@@ -123,7 +123,16 @@ object RNG {
   def intsUsingSequence(count: Int)(rng: RNG): Rand[List[Int]] =
     sequence(List.fill(count)(int))
 
-  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
+  // Exercise 6.7
+  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = { rng =>
+    val res: (B, RNG) = {
+      // Need to get an A so we can use g
+      val (a, g1) = f(rng)
+      val randB: Rand[B] = g(a)
+      randB(g1)
+    }
+    res
+  }
 }
 
 case class State[S,+A](run: S => (A, S)) {
