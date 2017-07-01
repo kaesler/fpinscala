@@ -147,7 +147,7 @@ object RNG {
 
 case class State[S,+A](run: S => (A, S)) {
 
-  // Exercise 6.9
+  // Exercise 6.10
   def flatMap[B](f: A => State[S, B]): State[S, B] = {
     State[S, B](
       run = { s =>
@@ -159,6 +159,7 @@ case class State[S,+A](run: S => (A, S)) {
     )
   }
 
+  // Exercise 6.10
   def map[B](f: A => B): State[S, B] = {
     flatMap { a =>
       State[S, B](
@@ -169,6 +170,7 @@ case class State[S,+A](run: S => (A, S)) {
     }
   }
 
+  // Exercise 6.10
   def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] = {
     flatMap { a =>
       State[S, C](
@@ -190,5 +192,27 @@ case class Machine(locked: Boolean, candies: Int, coins: Int)
 
 object State {
   type Rand[A] = State[RNG, A]
+
+  // Exercise 6.10
+  def unit[S, A](a: A): State[S, A] = {
+    State(
+      run = { s => (a, s) }
+    )
+  }
+
+  // Exercise 6.10
+  def sequence[S, A](states: List[State[S, A]]): State[S, List[A]] = {
+    State[S, List[A]](
+      run = { s =>
+        states
+          .foldLeft[(List[A], S)]((Nil, s)) { case ((as, s), lastState) =>
+          val (nextA, nextState) = lastState.run(s)
+          (as :+ nextA, nextState)
+        }
+      }
+    )
+  }
+
+  // Exercise 6.11
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
 }
