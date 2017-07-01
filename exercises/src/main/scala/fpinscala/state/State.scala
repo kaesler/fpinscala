@@ -123,7 +123,7 @@ object RNG {
   def intsUsingSequence(count: Int)(rng: RNG): Rand[List[Int]] =
     sequence(List.fill(count)(int))
 
-  // Exercise 6.7
+  // Exercise 6.8
   def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = { rng =>
     val res: (B, RNG) = {
       // Need to get an A so we can use g
@@ -133,15 +133,53 @@ object RNG {
     }
     res
   }
+  def nonNegativeLessThan(n: Int): Rand[Int] = {
+    flatMap(nonNegativeInt) { i =>
+      val mod = i % n
+      if (i + (n-1) - mod >= 0) {
+        unit(mod)
+      } else {
+        nonNegativeLessThan(n)
+      }
+    }
+  }
 }
 
 case class State[S,+A](run: S => (A, S)) {
-  def map[B](f: A => B): State[S, B] =
-    ???
-  def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-    ???
-  def flatMap[B](f: A => State[S, B]): State[S, B] =
-    ???
+
+  // Exercise 6.9
+  def flatMap[B](f: A => State[S, B]): State[S, B] = {
+    State[S, B](
+      run = { s =>
+        // First we need an A
+        val (a, s1) = run(s)
+        // Now we can apply f to the A ...
+        f(a).run(s1)
+      }
+    )
+  }
+
+  def map[B](f: A => B): State[S, B] = {
+    flatMap { a =>
+      State[S, B](
+        run = { s: S =>
+          (f(a), s)
+        }
+      )
+    }
+  }
+
+  def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] = {
+    flatMap { a =>
+      State[S, C](
+        run = { s =>
+          val (b, s1) = sb.run(s)
+          (f(a, b), s1)
+        }
+      )
+    }
+  }
+
 }
 
 sealed trait Input
