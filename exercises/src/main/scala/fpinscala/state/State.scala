@@ -214,5 +214,38 @@ object State {
   }
 
   // Exercise 6.11
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
+
+    def nextMachine(currentMachine: Machine, input: Input): Machine =
+      (currentMachine, input) match {
+
+        // Ignore: Machine out of candy.
+        case (m@Machine(_, 0, _), _) => m // ignore
+
+        // Ignore: Turning the knob on locked machine.
+        case (m@Machine(true, _, _), Turn) => m // ignore
+
+        // Ignore: Inserting coin in unlocked machine.
+        case (m@Machine(false, _, _), Coin) => m // ignore
+
+        // Unlock: Inserting coin in locked machine unlocks it.
+        case (m@Machine(true, _, _), Coin) => m.copy(locked = false)
+
+        // Dispense: turning knob on unlocked produces candy and becomes locked.
+        case (m@Machine(false, candies, coins), Turn) =>
+          m.copy(
+            locked = true,
+            candies = candies - 1,
+            coins = coins + 1
+          )
+      }
+
+    State[Machine, (Int, Int)](
+
+      run = { s =>
+        val finalMachine: Machine = inputs.foldLeft[Machine](s) (nextMachine)
+        ((finalMachine.candies, finalMachine.coins), finalMachine)
+      }
+    )
+  }
 }
