@@ -113,8 +113,9 @@ object RNG {
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = { rng =>
     val res: (List[A], RNG) = {
       fs
-        .foldLeft[(List[A], RNG)]((Nil, rng)) { case ((as,rng), lastRand) =>
+        .foldLeft[(List[A], RNG)]((Nil, rng)) { case ((as, rng), lastRand) =>
         val (nextA, nextRng) = lastRand(rng)
+        // Note: use cons here and then reverse the list
         (as :+ nextA, nextRng)
       }
     }
@@ -149,39 +150,27 @@ case class State[S,+A](run: S => (A, S)) {
 
   // Exercise 6.10
   def flatMap[B](f: A => State[S, B]): State[S, B] = {
-    State[S, B](
-      run = { s =>
-        // First we need an A
-        val (a, s1) = run(s)
-        // Now we can apply f to the A ...
-        f(a).run(s1)
-      }
-    )
+    State { s =>
+      // First we need an A
+      val (a, s1) = run(s)
+      // Now we can apply f to the A ...
+      f(a).run(s1)
+    }
   }
 
   // Exercise 6.10
-  def map[B](f: A => B): State[S, B] = {
-    flatMap { a =>
-      State[S, B](
-        run = { s: S =>
-          (f(a), s)
-        }
-      )
-    }
-  }
+  def map[B](f: A => B): State[S, B] =
+    flatMap { a => State.unit(f(a)) }
 
   // Exercise 6.10
   def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] = {
     flatMap { a =>
-      State[S, C](
-        run = { s =>
-          val (b, s1) = sb.run(s)
-          (f(a, b), s1)
-        }
-      )
+      State { s =>
+        val (b, s1) = sb.run(s)
+        (f(a, b), s1)
+      }
     }
   }
-
 }
 
 sealed trait Input
@@ -194,23 +183,19 @@ object State {
   type Rand[A] = State[RNG, A]
 
   // Exercise 6.10
-  def unit[S, A](a: A): State[S, A] = {
-    State(
-      run = { s => (a, s) }
-    )
-  }
+  def unit[S, A](a: A): State[S, A] =
+    State { s => (a, s) }
 
   // Exercise 6.10
   def sequence[S, A](states: List[State[S, A]]): State[S, List[A]] = {
-    State[S, List[A]](
-      run = { s =>
-        states
-          .foldLeft[(List[A], S)]((Nil, s)) { case ((as, s), lastState) =>
-          val (nextA, nextState) = lastState.run(s)
-          (as :+ nextA, nextState)
-        }
+    State { s =>
+      states
+        .foldLeft[(List[A], S)]((Nil, s)) { case ((as, s1), lastState) =>
+        val (nextA, nextState) = lastState.run(s1)
+        // Better to use cons and then reverse at end.
+        (as :+ nextA, nextState)
       }
-    )
+    }
   }
 
   // Exercise 6.11
