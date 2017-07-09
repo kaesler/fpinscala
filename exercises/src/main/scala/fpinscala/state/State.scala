@@ -198,10 +198,31 @@ object State {
     }
   }
 
+  // An action that:
+  //  - does not change the state
+  //  - extracts the state as a value
+  def get[S]: State[S, S] = State { s =>
+    // Don't change the state, Return the state as the value
+    (s, s)
+  }
+
+  // An action that:
+  //   - sets the state to a certain value
+  //   - returns nothing (Unit)
+  def set[S](s: S): State[S, Unit] = State { _ => ((), s) }
+
+  // An action that applies a given state-changing function,
+  // returning nothing (Unit)
+  def modify[S](f: S => S): State[S, Unit] = for {
+    s <- get
+    _ <- set(f(s))
+  } yield ()
+
   // Exercise 6.11
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
 
-    def nextMachine(currentMachine: Machine, input: Input): Machine =
+    // Curry this to facilitate facilitate things.
+    def nextMachine(input: Input)(currentMachine: Machine): Machine =
       (currentMachine, input) match {
 
         // Ignore: Machine out of candy.
@@ -225,12 +246,39 @@ object State {
           )
       }
 
-    State[Machine, (Int, Int)](
 
-      run = { s =>
-        val finalMachine: Machine = inputs.foldLeft[Machine](s) (nextMachine)
-        ((finalMachine.candies, finalMachine.coins), finalMachine)
-      }
-    )
+    // Crummy first attempt
+//    State[Machine, (Int, Int)](
+//
+//      run = { s =>
+//        val finalMachine: Machine = inputs.foldLeft[Machine](s) (nextMachine)
+//        ((finalMachine.candies, finalMachine.coins), finalMachine)
+//      }
+//    )
+
+    // Remember each State embodies a run: S => (A, S) i.e. it is really a
+    // "state transforming action that also produces a value".
+    // Now given an Input I, we can produce such a function as follows:
+    // f = { m: Machine => nextMachine(m, i) }
+    // So given a List[Input] we can map to produce List[State[Machine, (Int, Int)]
+    // The use sequence to give a State[Machine, List[(int, Int)]
+
+    // Slightly too verbose version after seeing elegant answer.
+    for {
+      mmm <- sequence(
+        inputs
+          .map { input =>
+            // Make the state transition function for this input
+            val machineFunc = nextMachine(input)
+
+            // Use that on the starting state
+            val bar = { initialM: Machine => machineFunc(initialM) }
+            modify(bar)
+
+          }
+      )
+      s <- get
+    } yield (s.coins, s.candies)
+
   }
 }
