@@ -1,0 +1,19 @@
+* Design decisions
+Meaning of Par.unit, .get
+Should unit() begin evaluating immediately?
+
+We want: to be able to combine async computations without waiting for them to
+finish.
+
+==> Make map2() lazy and begin executing both sides in parallel.
+
+What if we make the forking explicit?
+  - e.g. we can then avoid  it when we know it will not win.
+
+Seems appropriate to give get() the responsibility of creating threads and submitting execution tasks.
+
+==> fork() just takes an unevaluated Par and marks it for
+
+i.e. Par is more a description of a computation, rather than a container of a value.
+
+i.e. a program to "run" ==> rename get to run,
