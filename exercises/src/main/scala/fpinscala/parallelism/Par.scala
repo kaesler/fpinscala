@@ -80,6 +80,9 @@ object Par {
     }
   }
 
+  // Exercise 7.4.
+  def asyncF[A, B](f: A => B): A => Par[B] = a => fork(Par.unit(f(a)))
+
   def fork[A](a: => Par[A]): Par[A] =
     // This is the simplest and most natural implementation of `fork`,
     // but there are some problems with it--for one, the outer
