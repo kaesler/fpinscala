@@ -66,15 +66,23 @@ object Option {
   }
 
   // 4.3
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = {
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
     a.flatMap { theA =>
       b.flatMap { theB =>
         Some(f(theA, theB))
       }
     }
-  }
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = ???
+  // 4.4
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = {
+    ???
+//    a.foldLeft(None) { (as: List[A], optA: Option[A]) =>
+//      optA match {
+//        case None => List.empty
+//        case Some(a) => as +: a
+//      }
+//    }
+  }
 
   def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = ???
 }
