@@ -121,6 +121,18 @@ object Par {
 
 
   }
+
+  // Exercise 7.5.
+  def sequence[A](pars: List[Par[A]]): Par[List[A]] = {
+    pars match {
+      case Nil => Par.unit(Nil)
+      case p::ps =>
+        Par.map2(p, sequence(ps)) { (a, as) => a :: as }
+    }
+  }
+
+  // Exerciose 7.6.
+  // def parFilter[A](as: List[A])
 }
 
 object Examples {
